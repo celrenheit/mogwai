@@ -60,7 +60,7 @@ module.exports = TitanClient = (function(){
   TitanClient.prototype.getExistingTypes = function() {
     var g = this.mogwai.connection.grex;
 
-    return g.getIndexedKeys("Vertex.class");
+    return g.getIndexedKeys("Vertex.class").get();
   };
 
   /**
