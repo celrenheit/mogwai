@@ -7,7 +7,11 @@ module.exports = Model = (function() {
    * vertex will be identified by a special "$type" property set to the
    * name of the Model defined in the Schema. See ModelCompiler.compile().
    */
-  function Model() {}
+  function Model(properties) {
+    for(var name in properties) {
+      this[name] = properties[name];
+    }
+  }
 
   /**
    * Execute a Grex query.

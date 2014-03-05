@@ -46,4 +46,15 @@ describe("Model", function() {
     model.findById.should.be.a("function");
     done();
   });
+
+  it("should create a new instance", function(done) {
+    var name = "Batman";
+    var instance = new model({
+      name: name
+    });
+
+    instance.should.have.property("name");
+    instance.name.should.equal(name);
+    done()
+  });
 });
