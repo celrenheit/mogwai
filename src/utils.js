@@ -9,9 +9,18 @@ module.exports = Utils = {
   getCaller: function() {
     var stack = getStack();
     return stack[3].receiver;
+  },
+  camelCase: function(input) { 
+      return capitalize(input.toLowerCase().replace(/_(.)/g, function(match, group1) {
+          return group1.toUpperCase();
+      }));
   }
 };
 
+function capitalize(s)
+{
+    return s[0].toUpperCase() + s.slice(1);
+}
 
 function getStack() {
   // Save original Error.prepareStackTrace

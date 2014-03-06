@@ -7,7 +7,7 @@ describe("Connection", function() {
     var settings = {
       host: "localhost",
       port: 8182,
-      graph: "test-graph",
+      graph: "graph",
       client: "titan"
     };
 
@@ -22,10 +22,17 @@ describe("Connection", function() {
 var model = null;
 
 describe("Schemas", function() {
-  var schemaName = "SomeSchema";
+  var schemaName = "User";
 
   before(function(done) {
-    var Schema = new mogwai.Schema();
+    var Schema = new mogwai.Schema({
+      name: {
+        type: String
+      },
+      first_name: {
+        type: String
+      }
+    });
     model = mogwai.model(schemaName, Schema);
     done();
   });
@@ -52,9 +59,40 @@ describe("Model", function() {
     var instance = new model({
       name: name
     });
-
     instance.should.have.property("name");
     instance.name.should.equal(name);
     done()
+  });
+  it("should save the new model", function(done) {
+
+    var name = "Batman";
+    var instance = new model({
+      name: name
+    });
+    instance.save(function(err, results) {
+      should.exist(results);
+      results.success.should.be.true;
+      done();
+    });
+  });
+  it("should get data by name", function(done) {
+    model.findByName("Bob", function(err, results) {
+      should.exist(results);
+      done();
+    });
+  });
+});
+
+
+describe("Connection", function() {
+  it("should delete all data in graph database", function(done) {
+    var grex = mogwai.connection.grex;
+    grex.clear();
+    done();
+  });
+  it("should disconnect", function(done) {
+    var grex = mogwai.connection.grex;
+    grex.shutdown();
+    done();
   });
 });

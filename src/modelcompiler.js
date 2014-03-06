@@ -3,7 +3,8 @@ var _ = require("underscore"),
 
 var Model = require("./model"),
     __extends = require("./extends"),
-    GroovyParser = require("./groovy/groovyparser");
+    GroovyParser = require("./groovy/groovyparser"),
+    Utils = require("./utils");
 
 module.exports = ModelCompiler = (function() {
   /**
@@ -101,7 +102,7 @@ module.exports = ModelCompiler = (function() {
    * @param {Schema} schema
    */
   ModelCompiler.prototype.attachSchemaFunctions = function(model, schema) {
-    var fnName;
+    var fnName, property;
 
     // Add instance methods
     for (fnName in schema.methods) {
@@ -112,6 +113,16 @@ module.exports = ModelCompiler = (function() {
     for (fnName in schema.statics) {
       model[fnName] = schema.statics[fnName];
     }
+
+    // Add default findBy* methods relative to schema
+    for(property in schema.properties) {
+      console.log("new fn:", "findBy" + Utils.camelCase(property));
+      var findByX = function(value, cb) {
+        model.scripts.findByKeyValue(property, value, cb);
+      };
+      model["findBy" + Utils.camelCase(property)] = findByX;
+    }
+
   };
 
   /**
