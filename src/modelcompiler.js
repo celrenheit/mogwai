@@ -102,7 +102,7 @@ module.exports = ModelCompiler = (function() {
    * @param {Schema} schema
    */
   ModelCompiler.prototype.attachSchemaFunctions = function(model, schema) {
-    var fnName, property;
+    var fnName;
 
     // Add instance methods
     for (fnName in schema.methods) {
@@ -115,11 +115,13 @@ module.exports = ModelCompiler = (function() {
     }
 
     // Add default findBy* methods relative to schema
-    for(property in schema.properties) {
-      var findByX = function(value, cb) {
-        model.scripts.findByKeyValue(property, value, cb);
-      };
-      model["findBy" + Utils.camelCase(property)] = findByX;
+    for(var property in schema.properties) {
+      model["findBy" + Utils.camelCase(property)] = (function (prop) {
+        return function(value, cb) {
+          console.log("find", prop, "by value", value);
+          return model.scripts.findByKeyValue(prop, value, cb);
+        }
+      })(property);
     }
 
   };
