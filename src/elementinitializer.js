@@ -24,12 +24,21 @@ module.exports = (function () {
         i,
         elements = [];
 
-    for (i = 0; i < responseBody.results.length; i++) {
-      rawElement = responseBody.results[i];
-      elements.push(this.initElement(rawElement));
+    if(responseBody.results && responseBody.results.length === 1) {
+      responseBody.results = responseBody.results[Object.keys(responseBody.results)[0]];
+      var element = this.initElement(responseBody.results);
+      
+      return element;
+    } else {
+
+      for (i = 0; i < responseBody.results.length; i++) {
+        rawElement = responseBody.results[i];
+        elements.push(this.initElement(rawElement));
+      }
+
+      return elements;
     }
 
-    return elements;
   };
 
   /**
