@@ -116,7 +116,6 @@ module.exports = ModelCompiler = (function() {
 
     // Add default findBy* methods relative to schema
     for(property in schema.properties) {
-      console.log("new fn:", "findBy" + Utils.camelCase(property));
       var findByX = function(value, cb) {
         model.scripts.findByKeyValue(property, value, cb);
       };
