@@ -58,7 +58,7 @@ module.exports = TitanClient = (function(){
    * @return {Promise}
    */
   TitanClient.prototype.getExistingTypes = function() {
-    var g = this.mogwai.connection.grex;
+    var g = this.mogwai.connection.grex.gremlin().g;
 
     return g.getIndexedKeys("Vertex.class").get();
   };
@@ -74,7 +74,7 @@ module.exports = TitanClient = (function(){
    */
   TitanClient.prototype.buildMakeKeyPromise = function(alreadyIndexedKeys) {
     var promises = [],
-        g = this.mogwai.connection.grex,
+        g = this.mogwai.connection.grex.gremlin().g,
         models = this.mogwai.models,
         schemaProperties,
         property, titanKey;

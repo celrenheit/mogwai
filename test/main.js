@@ -69,7 +69,7 @@ describe("Model", function() {
     var instance = new model({
       name: name
     });
-    instance.save(function(err, results) {
+    instance.save(function(err, results) {console.log("results", results);
       should.exist(results);
       results.success.should.be.true;
       done();
@@ -86,12 +86,12 @@ describe("Model", function() {
 
 describe("Connection", function() {
   it("should delete all data in graph database", function(done) {
-    var grex = mogwai.connection.grex;
+    var grex = mogwai.connection.grex.gremlin().g;
     grex.clear();
     done();
   });
   it("should disconnect", function(done) {
-    var grex = mogwai.connection.grex;
+    var grex = mogwai.connection.grex.gremlin().g;
     grex.shutdown();
     done();
   });
