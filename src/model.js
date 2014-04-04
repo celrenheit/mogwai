@@ -1,15 +1,41 @@
-module.exports = Model = (function() {
+var _ = require("underscore");
 
+/**
+ * Mogwai main Model class.
+ *
+ * Models are compiled at application startup from a Schema definition.
+ *
+ * Models are ultimately stored as at least 1 Vertex in the database. That
+ * vertex will be identified by a special "$type" property set to the
+ * name of the Model defined in the Schema. See ModelCompiler.compile().
+ *
+ * Models have to two kind or properties:
+ * - selfProperties: properties bound to the vertex properties
+ * - refProperties: links to other models, ie. edges pointing to other vertices
+ */
+module.exports = Model = (function() {
   /**
-   * Mogwai Model class
+   * Model constructor.
+   * Takes an optional map of key/value as first parameter used to assign
+   * properties directly at instantiation.
    *
-   * Models are ultimately stored as at least 1 Vertex in the database. That
-   * vertex will be identified by a special "$type" property set to the
-   * name of the Model defined in the Schema. See ModelCompiler.compile().
+   * @param {Object} rawElement - Optional: map properties
    */
-  function Model(properties) {
-    for(var name in properties) {
-      this[name] = properties[name];
+  function Model(rawElement) {
+    var properties = this.schema.properties,
+        property;
+
+    // Attach properties to model instance
+    // TODO: move the following logic to model prototype, and avoid the dirty
+    // _.clone trick.
+    for (var propertyName in properties) {
+      property = _.clone(properties[propertyName]);
+      property.attachToModel(this);
+    }
+
+    // If any, set values to properties
+    if (rawElement) {
+      _.extend(this, rawElement);
     }
   }
 
@@ -48,7 +74,9 @@ module.exports = Model = (function() {
   };
 
   /**
-   * Update a Model instance properties.
+   * Update a Model instance properties, updating both the underlying vertex
+   * own properties as well as adding edges to other vertices if required by
+   * this model's refProperties.
    *
    * @see update() function definition in model.groovy
    * @param {Function} callback
@@ -57,12 +85,14 @@ module.exports = Model = (function() {
     var propertiesMap = {},
         propertyValue;
 
-    // Build property map only for properties defined in the Schema
-    for (var propertyName in this.schema.properties) {
+    // Set vertex properties as model's selfProperties: build property map
+    // only for non-reference properties defined in the Schema
+    for (var propertyName in this.schema.selfProperties) {
       propertyValue = this[propertyName];
       propertiesMap[propertyName] = propertyValue;
     }
 
+    // Update database. TODO: also handle refproperties.
     this.scripts.update(this._id, propertiesMap).execute(function(err, results) {
       return callback(err, results);
     });
@@ -77,7 +107,7 @@ module.exports = Model = (function() {
     var doc,
         g,
         property,
-        properties = this.schema.properties,
+        properties = this.schema.selfProperties,
         grex = this.g,
         gremlin = this.g.gremlin();
 
@@ -88,13 +118,16 @@ module.exports = Model = (function() {
     g = gremlin.g;
     var v = g.addVertex(doc.toObject(), 'v');
 
-    for (var name in properties) {
-      property = properties[name];
+    for (var propertyName in properties) {
+      property = properties[propertyName];
 
-      if (property.isIndexed()) {
-        v.addProperty(name, this[property.name]);
-      } else {
-        v.setProperty(name, this[property.name]);
+      // Only add/set non-null properties (avoid Rexster bug?)
+      if (_.isNull(this[property.name]) === false) {
+        if (property.isIndexed()) {
+          v.addProperty(propertyName, this[property.name]);
+        } else {
+          v.setProperty(propertyName, this[property.name]);
+        }
       }
     }
     

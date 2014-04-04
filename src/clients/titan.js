@@ -11,6 +11,7 @@ module.exports = TitanClient = (function(){
    */
   function TitanClient(mogwai) {
     RexsterClient.apply(this, arguments); // Call parent constructor
+    this.indexedKeys = [];
   }
 
   // Inherit from RexsterClient
@@ -39,8 +40,8 @@ module.exports = TitanClient = (function(){
 
     this.getExistingTypes()
     .then(function(result) {
-      alreadyIndexedKeys = result.results;
-      return self.buildMakeKeyPromise(alreadyIndexedKeys);
+      self.indexedKeys = result.results;
+      return self.buildMakeKeyPromise(this.indexedKeys);
     })
     .then(function(success) {
       callback(null, success);
@@ -75,16 +76,17 @@ module.exports = TitanClient = (function(){
    *
    * @return {Promise} to create all keys
    */
-  TitanClient.prototype.buildMakeKeyPromise = function(alreadyIndexedKeys) {
+  TitanClient.prototype.buildMakeKeyPromise = function() {
     var promises = [],
         gremlin = this.mogwai.connection.grex.gremlin(),
         g = gremlin.g,
+        indexableProperties = this.getIndexableProperties(),
         models = this.mogwai.models,
         schemaProperties,
         property, titanKey;
 
     // Make sure we index the Mogwai special $type key used for binding a model type to a vertex.
-    if (alreadyIndexedKeys.indexOf("$type") === -1) {
+    if (this.isAlreadyIndexed("$type") === false) {
 
       g.makeKey("$type").dataType("String.class").indexed("Vertex.class");
     
@@ -95,16 +97,14 @@ module.exports = TitanClient = (function(){
     
 
     // Also index keys defined for each model, but skip already indexed keys
-    for (var i in models) {
-      schemaProperties = models[i].schema.properties;
-
-      for (var propertyName in schemaProperties) {
+    for (var i = 0; i < indexableProperties.length; i++) {
+        property = indexableProperties[i];
         // Only index keys that were not indexed before, skip otherwise
-        if (alreadyIndexedKeys.indexOf(propertyName) === -1) {
-          property = schemaProperties[propertyName];
+        if (this.isAlreadyIndexed(property.name) === false) {
           gremlin = this.mogwai.connection.grex.gremlin();
           g = gremlin.g;
-          titanKey = g.makeKey(propertyName).dataType(property.getDataType()).indexed("Vertex.class");
+          titanKey = g.makeKey(property.name).dataType(property.getDataType()).indexed("Vertex.class");
+
 
           if (property.isUnique()) {
             titanKey.unique();
@@ -113,9 +113,49 @@ module.exports = TitanClient = (function(){
           promises.push(g.gremlin.exec());
         }
       }
-    }
+    
 
     return Q.all(promises);
+  };
+
+  /**
+   * For all registered Mogwai models with given properties, return an array of
+   * of properties (keys) which can be indexed.
+   *
+   * @return {Array} of properties
+   */
+  TitanClient.prototype.getIndexableProperties = function() {
+    var models = this.mogwai.models,
+        schemaProperties,
+        property,
+        indexableProperties = [];
+
+    for (var modelName in models) {
+      schemaProperties = models[modelName].schema.properties;
+
+      for (var propertyName in schemaProperties) {
+        property = schemaProperties[propertyName];
+
+        if (property.isIndexable()) {
+          indexableProperties.push(property);
+        }
+      }
+    }
+
+    return indexableProperties;
+  };
+
+  /**
+   * Tell whether a key has already been indexed in the Database or not.
+   *
+   * @param {String} keyname
+   * @return {Boolean}
+   */
+  TitanClient.prototype.isAlreadyIndexed = function(keyName) {
+    if (this.indexedKeys.indexOf(keyName) === -1) {
+      return false;
+    }
+    return true;
   };
 
 
