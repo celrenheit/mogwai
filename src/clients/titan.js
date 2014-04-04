@@ -58,9 +58,12 @@ module.exports = TitanClient = (function(){
    * @return {Promise}
    */
   TitanClient.prototype.getExistingTypes = function() {
-    var g = this.mogwai.connection.grex.gremlin().g;
-
-    return g.getIndexedKeys("Vertex.class").get();
+    var gremlin = this.mogwai.connection.grex.gremlin(),
+        g = gremlin.g;
+    
+    g.getIndexedKeys("Vertex.class");
+    
+    return gremlin.exec();
   };
 
   /**
@@ -74,15 +77,22 @@ module.exports = TitanClient = (function(){
    */
   TitanClient.prototype.buildMakeKeyPromise = function(alreadyIndexedKeys) {
     var promises = [],
-        g = this.mogwai.connection.grex.gremlin().g,
+        gremlin = this.mogwai.connection.grex.gremlin(),
+        g = gremlin.g,
         models = this.mogwai.models,
         schemaProperties,
         property, titanKey;
 
     // Make sure we index the Mogwai special $type key used for binding a model type to a vertex.
     if (alreadyIndexedKeys.indexOf("$type") === -1) {
-      promises.push(g.makeKey("$type").dataType("String.class").indexed("Vertex.class").make());
+
+      g.makeKey("$type").dataType("String.class").indexed("Vertex.class");
+    
+      promises.push(g.gremlin.exec());
     }
+
+    // New gremlin and graph
+    
 
     // Also index keys defined for each model, but skip already indexed keys
     for (var i in models) {
@@ -92,14 +102,15 @@ module.exports = TitanClient = (function(){
         // Only index keys that were not indexed before, skip otherwise
         if (alreadyIndexedKeys.indexOf(propertyName) === -1) {
           property = schemaProperties[propertyName];
-
+          gremlin = this.mogwai.connection.grex.gremlin();
+          g = gremlin.g;
           titanKey = g.makeKey(propertyName).dataType(property.getDataType()).indexed("Vertex.class");
 
           if (property.isUnique()) {
             titanKey.unique();
           }
 
-          promises.push(titanKey.make());
+          promises.push(g.gremlin.exec());
         }
       }
     }

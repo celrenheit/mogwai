@@ -75,7 +75,7 @@ module.exports = Model = (function() {
    */
   Model.prototype.insert = function(callback) {
     var doc,
-        transaction,
+        g,
         property,
         properties = this.schema.properties,
         grex = this.g,
@@ -85,8 +85,8 @@ module.exports = Model = (function() {
     // Assign Mogwai reserved "$type" property
     doc.$type = this.$type;
 
-    transaction = gremlin.g;
-    v = transaction.addVertex(doc.toObject());
+    g = gremlin.g;
+    var v = g.addVertex(doc.toObject(), 'v');
 
     for (var name in properties) {
       property = properties[name];
@@ -97,8 +97,8 @@ module.exports = Model = (function() {
         v.setProperty(name, this[property.name]);
       }
     }
-
-    return this.exec(gremlin.exec(), callback);
+    
+    return this.exec(g.gremlin.exec(), callback);
   };
 
   /**
