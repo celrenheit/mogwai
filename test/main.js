@@ -28,9 +28,6 @@ describe("Schemas", function() {
     var Schema = new mogwai.Schema({
       name: {
         type: String
-      },
-      first_name: {
-        type: String
       }
     });
     model = mogwai.model(schemaName, Schema);
@@ -69,7 +66,7 @@ describe("Model", function() {
     var instance = new model({
       name: name
     });
-    instance.save(function(err, results) {console.log("results", results);
+    instance.save(function(err, results) {
       should.exist(results);
       results.success.should.be.true;
       done();
