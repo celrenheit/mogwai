@@ -145,8 +145,8 @@ var Model = (function() {
     if(v2 instanceof Model) {
       v2 = v2._id;
     }
-    // var v1 = gremlin.g.v(v1);
-    // var v2 = gremlin.g.v(v2);
+    var v1 = gremlin.g.identify("v1").v(v1);
+    var v2 = gremlin.g.identify("v2").v(v2);
     console.log("v1, v2", v1, v2);
     gremlin.g.addEdge(v1, v2, label, properties, 'e');
     console.log(gremlin.script);

@@ -24,7 +24,7 @@
     "url": "https://github.com/gulthor/mogwai/issues"
   },
   "dependencies": {
-    "grex": "^0.5.5",
+    "grex": "git://github.com/celrenheit/grex#custom-identifier",
     "lodash": "^2.4.1"
   },
   "devDependencies": {
