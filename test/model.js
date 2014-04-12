@@ -69,16 +69,16 @@ describe('Relationships', function() {
   });
   describe('addEdge()', function() {
     it('should save a new edge between the two models', function(done) {
-      user.addOutgoingEdge(secondUser, 'follows', { foo : 'bar' }, function(err, results) {console.log(err, results);
-        var edge = results[0];
+      user.addOutgoingEdge(secondUser, 'follows', { foo : 'bar', batman: 'robin' }, function(err, results) {
+        results.results.length.should.equal(1);
+        var edge = results.results[0];
 
-        results.length.should.equal(1);
         edge.should.have.property('_type', 'edge');
-
         edge.should.have.property('_outV', user._id);
         edge.should.have.property('_inV', secondUser._id);
         edge.should.have.property('_label', 'follows');
         edge.should.have.property('foo', 'bar');
+        done();
       });
     });
   });
