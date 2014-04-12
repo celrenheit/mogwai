@@ -49,8 +49,38 @@ describe('Model', function() {
         should.not.exist(err);
         should.exist(users);
         users[0].should.be.instanceOf(model);
+
         done();
       });
     });
   });
+
+});
+
+var secondUser;
+
+describe('Relationships', function() {
+  before(function(done) {
+    secondUser = new User();
+    secondUser.name = 'Alice';
+    secondUser.save(function(err, user, results) {
+      done();
+    });
+  });
+  describe('addEdge()', function() {
+    it('should save a new edge between the two models', function(done) {
+      user.addOutgoingEdge(secondUser, 'follows', { foo : 'bar' }, function(err, results) {console.log(err, results);
+        var edge = results[0];
+
+        results.length.should.equal(1);
+        edge.should.have.property('_type', 'edge');
+
+        edge.should.have.property('_outV', user._id);
+        edge.should.have.property('_inV', secondUser._id);
+        edge.should.have.property('_label', 'follows');
+        edge.should.have.property('foo', 'bar');
+      });
+    });
+  });
+
 });

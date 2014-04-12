@@ -125,6 +125,55 @@ var Model = (function() {
       return this.gremlin(gremlinQuery).execute(callback);
     }
   };
+  /**
+   * Add edge between vertices
+   * 
+   * @param {Integer}   v1
+   * @param {Integer}   v2
+   * @param {String}   label
+   * @param {Object}   properties
+   * @param {Function} callback
+   */
+  Model.prototype.addEdge = function(v1, v2, label, properties, callback) {
+    var gremlin = this.g.gremlin();
+    var g = gremlin.g;
+
+    if(v1 instanceof Model) {
+      v1 = v1._id;
+    }
+
+    if(v2 instanceof Model) {
+      v2 = v2._id;
+    }
+    // var v1 = gremlin.g.v(v1);
+    // var v2 = gremlin.g.v(v2);
+    console.log("v1, v2", v1, v2);
+    gremlin.g.addEdge(v1, v2, label, properties, 'e');
+    console.log(gremlin.script);
+    gremlin.exec(callback);
+  };
+
+  Model.prototype.addOutgoingEdge = function(v2, label, properties, callback) {
+    if(!this.hasOwnProperty("_id")) {
+      var err = new Error("[Model][Edges] Error creating a new edge");
+      console.log(err);
+      callback(err, null);
+      return;
+    }
+
+    this.addEdge(this, v2, label, properties, callback);
+  };
+
+  Model.prototype.addIncomingEdge = function(v2, label, properties, callback) {
+    if(!this.hasOwnProperty("_id")) {
+      var err = new Error("[Model][Edges] Error creating a new edge");
+      console.log(err);
+      callback(err, null);
+      return;
+    }
+
+    this.addEdge(v2, this, label, properties, callback);
+  };
 
 
   return Model;
