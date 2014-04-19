@@ -11,17 +11,6 @@ var Model = (function() {
    * name of the Model defined in the Schema. See ModelCompiler.compile().
    */
   function Model(rawElement) {
-    var properties = this.schema.properties,
-        property;
-
-    // Attach properties to model instance
-    // TODO: move the following logic to model prototype, and avoid the dirty
-    // _.clone trick.
-    for (var propertyName in properties) {
-      property = _.clone(properties[propertyName]);
-      property.attachToModel(this);
-    }
-
     // If any, set values to properties
     if (rawElement) {
       _.extend(this, rawElement);
